@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>NB Driver Trainer • Rules of the Road</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --accent: #22c55e;
+      --accent-dim: #16a34a;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+      padding: 12px;
+    }
+    .app { max-width: 520px; margin: 0 auto; }
+    header { text-align: center; padding: 16px 0 12px; }
+    header h1 { font-size: 1.45rem; font-weight: 700; letter-spacing: -0.02em; }
+    header p { color: var(--muted); font-size: 0.9rem; margin-top: 4px; }
+    .badge {
+      display: inline-block; background: var(--accent); color: #052e16;
+      font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; margin-top: 8px;
+    }
+    .stats { display: flex; gap: 8px; margin: 12px 0; flex-wrap: wrap; }
+    .stat {
+      flex: 1; min-width: 90px; background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 10px; text-align: center;
+    }
+    .stat .num { font-size: 1.35rem; font-weight: 700; color: var(--accent); }
+    .stat .label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .controls { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    select, button {
+      font: inherit; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--card); color: var(--text); padding: 10px 14px; cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: #052e16; border-color: var(--accent); font-weight: 600; }
+    button.primary:active { background: var(--accent-dim); }
+    button.ghost { background: transparent; }
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+      padding: 20px; margin-bottom: 16px;
+    }
+    .q-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 0.8rem; color: var(--muted); }
+    .diff { padding: 2px 8px; border-radius: 6px; font-weight: 600; font-size: 0.7rem; }
+    .diff.easy { background: #14532d; color: #86efac; }
+    .diff.medium { background: #713f12; color: #fde68a; }
+    .diff.hard { background: #7f1d1d; color: #fca5a5; }
+    .question { font-size: 1.15rem; font-weight: 600; margin-bottom: 16px; }
+    .sign-box {
+      background: #0f172a; border-radius: 12px; padding: 20px; margin-bottom: 16px;
+      text-align: center; min-height: 100px; display: flex; align-items: center; justify-content: center;
+      border: 1px dashed var(--border);
+    }
+    .options { display: flex; flex-direction: column; gap: 10px; }
+    .opt {
+      background: #0f172a; border: 2px solid var(--border); border-radius: 12px;
+      padding: 14px 16px; text-align: left; cursor: pointer; transition: border-color 0.15s, background 0.15s; font-size: 1rem;
+    }
+    .opt:hover { border-color: var(--muted); }
+    .opt.selected { border-color: var(--accent); background: #14532d33; }
+    .opt.correct { border-color: var(--accent); background: #14532d55; }
+    .opt.wrong { border-color: var(--danger); background: #7f1d1d44; }
+    .opt:disabled { cursor: default; opacity: 0.9; }
+    .feedback { margin-top: 16px; padding: 14px; border-radius: 12px; font-size: 0.95rem; display: none; }
+    .feedback.show { display: block; }
+    .feedback.ok { background: #14532d44; border: 1px solid var(--accent); }
+    .feedback.bad { background: #7f1d1d44; border: 1px solid var(--danger); }
+    .actions { display: flex; gap: 10px; margin-top: 16px; }
+    .actions button { flex: 1; }
+    .home-screen, .result-screen { text-align: center; }
+    .home-screen h2 { margin-bottom: 8px; }
+    .home-screen p { color: var(--muted); margin-bottom: 20px; }
+    .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+    .mode-btn {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 18px 12px; text-align: center; cursor: pointer;
+    }
+    .mode-btn:hover { border-color: var(--accent); }
+    .mode-btn strong { display: block; font-size: 1.05rem; margin-bottom: 4px; }
+    .mode-btn span { font-size: 0.8rem; color: var(--muted); }
+    footer { text-align: center; font-size: 0.75rem; color: var(--muted); padding: 20px 0 40px; }
+    .progress-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin: 8px 0 16px; }
+    .progress-bar > div { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s; }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <div id="home" class="home-screen">
+      <header>
+        <h1>🚗 NB Driver Trainer</h1>
+        <p>Rules of the Road • New Brunswick</p>
+        <span class="badge">Based on official Driver’s Handbook</span>
+      </header>
+      <div class="card">
+        <h2>Ready to crush the written exam?</h2>
+        <p>Interactive practice with increasing difficulty. Signs, rules, young-driver rules & more.</p>
+        <div class="mode-grid">
+          <div class="mode-btn" onclick="startMode('mixed')">
+            <strong>Endless Mix</strong>
+            <span>All topics • adaptive</span>
+          </div>
+          <div class="mode-btn" onclick="startMode('signs')">
+            <strong>Road Signs</strong>
+            <span>Recognition & meaning</span>
+          </div>
+          <div class="mode-btn" onclick="startMode('rules')">
+            <strong>Rules of the Road</strong>
+            <span>Speed, right-of-way…</span>
+          </div>
+          <div class="mode-btn" onclick="startMode('young')">
+            <strong>Young Drivers</strong>
+            <span>Level 1 restrictions</span>
+          </div>
+        </div>
+        <button class="primary" style="width:100%" onclick="startMode('mixed')">Start Training</button>
+      </div>
+      <div class="stats" id="homeStats" style="display:none">
+        <div class="stat"><div class="num" id="hs-total">0</div><div class="label">Answered</div></div>
+        <div class="stat"><div class="num" id="hs-acc">0%</div><div class="label">Accuracy</div></div>
+        <div class="stat"><div class="num" id="hs-streak">0</div><div class="label">Best Streak</div></div>
+      </div>
+    </div>
+
+    <div id="quiz" style="display:none">
+      <header>
+        <h1 id="modeTitle">Training</h1>
+        <p id="modeSub">Keep going…</p>
+      </header>
+      <div class="stats">
+        <div class="stat"><div class="num" id="s-score">0</div><div class="label">Correct</div></div>
+        <div class="stat"><div class="num" id="s-streak">0</div><div class="label">Streak</div></div>
+        <div class="stat"><div class="num" id="s-total">0</div><div class="label">Total</div></div>
+      </div>
+      <div class="progress-bar"><div id="prog"></div></div>
+      <div class="card">
+        <div class="q-meta">
+          <span id="qCat">Rules</span>
+          <span class="diff" id="qDiff">easy</span>
+        </div>
+        <div class="sign-box" id="signBox" style="display:none"></div>
+        <div class="question" id="qText"></div>
+        <div class="options" id="opts"></div>
+        <div class="feedback" id="fb"></div>
+        <div class="actions" id="act" style="display:none">
+          <button class="primary" onclick="nextQ()">Next Question →</button>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="ghost" onclick="endSession()">End Session</button>
+      </div>
+    </div>
+
+    <div id="result" style="display:none" class="result-screen">
+      <header><h1>Session Complete</h1></header>
+      <div class="card">
+        <div class="stats" style="margin-bottom:20px">
+          <div class="stat"><div class="num" id="r-correct">0</div><div class="label">Correct</div></div>
+          <div class="stat"><div class="num" id="r-acc">0%</div><div class="label">Accuracy</div></div>
+          <div class="stat"><div class="num" id="r-streak">0</div><div class="label">Best Streak</div></div>
+        </div>
+        <p id="r-msg" style="margin-bottom:20px;color:var(--muted)"></p>
+        <button class="primary" style="width:100%;margin-bottom:10px" onclick="startMode(currentMode)">Train Again</button>
+        <button class="ghost" style="width:100%" onclick="showHome()">Back Home</button>
+      </div>
+    </div>
+
+    <footer>
+      Based on the official New Brunswick Driver’s Handbook (Service NB / GNB).<br>
+      For practice only — always confirm with the latest handbook & laws.<br>
+      Made for young NB drivers ❤️
+    </footer>
+  </div>
+
+<script>
+const questions = [
+  {id:1,cat:"signs",diff:"easy",type:"mc",q:"What shape is a STOP sign?",options:["Octagon (8 sides)","Triangle","Diamond","Circle"],answer:0,explain:"Stop signs are red octagons with white lettering. You must come to a complete stop."},
+  {id:2,cat:"signs",diff:"easy",type:"mc",q:"A yellow diamond-shaped sign usually means…",options:["Regulatory rule","Warning of a hazard or condition ahead","Tourist information","Construction zone only"],answer:1,explain:"Diamond-shaped signs with yellow backgrounds are warning signs. They alert you to hazards that require extra caution."},
+  {id:3,cat:"signs",diff:"easy",type:"mc",q:"What does a red circle with a slash through a symbol mean?",options:["Proceed with caution","The action is prohibited","Yield","School zone"],answer:1,explain:"A red circle with a diagonal slash means the action shown is not allowed (e.g., no U-turn, no left turn)."},
+  {id:4,cat:"signs",diff:"medium",type:"mc",q:"A fluorescent yellow pentagon-shaped sign indicates…",options:["Hospital nearby","School zone or school crosswalk","Playground only","Construction ahead"],answer:1,explain:"The fluorescent yellow-green pentagon is used for school zones and school crosswalks. Maximum 50 km/h and extreme caution for children."},
+  {id:5,cat:"signs",diff:"easy",type:"tf",q:"True or False: You may turn right on a red light after a full stop, unless a sign prohibits it.",options:["True","False"],answer:0,explain:"In New Brunswick you may turn right on red after stopping completely and yielding to pedestrians and traffic, unless a ‘No Right Turn on Red’ sign is posted."},
+  {id:6,cat:"signs",diff:"medium",type:"mc",q:"Orange diamond or rectangular signs generally indicate…",options:["Tourist attractions","Construction or temporary work zones","Permanent speed limits","Parking restrictions"],answer:1,explain:"Orange is the colour for construction and maintenance warning signs. Expect workers, changed conditions, and reduced speeds."},
+  {id:7,cat:"signs",diff:"hard",type:"mc",q:"At a railway crossing with flashing lights and bells activated, you must stop at least how far from the nearest rail?",options:["2 metres","5 metres","10 metres","15 metres"],answer:1,explain:"Stop at least 5 m (16 ft) from the nearest rail when lights/bells are activated or a train is approaching. Do not proceed until clear."},
+  {id:8,cat:"signs",diff:"medium",type:"mc",q:"A white rectangular sign with black lettering is typically…",options:["A warning sign","A regulatory sign (law)","A guide/information sign","A construction sign"],answer:1,explain:"White rectangles/squares with black (or coloured) lettering are regulatory signs — they state the law (speed, parking, turns, etc.)."},
+  {id:10,cat:"rules",diff:"easy",type:"mc",q:"Unless otherwise posted, the default speed limit in urban districts in New Brunswick is…",options:["40 km/h","50 km/h","60 km/h","80 km/h"],answer:1,explain:"Default speed limit is 50 km/h in urban districts and 80 km/h in other (rural) areas unless signs indicate otherwise."},
+  {id:11,cat:"rules",diff:"easy",type:"mc",q:"Unless otherwise posted, the default speed limit outside urban areas is…",options:["50 km/h","70 km/h","80 km/h","100 km/h"],answer:2,explain:"Outside urban districts the default is 80 km/h unless a different limit is posted."},
+  {id:12,cat:"rules",diff:"medium",type:"mc",q:"You must signal your intention to turn or change lanes at least how far in advance?",options:["15 metres","30 metres","60 metres","100 metres"],answer:1,explain:"Signal at least 30 m (100 ft) before turning, stopping, or changing lanes so other road users have time to react."},
+  {id:13,cat:"rules",diff:"medium",type:"mc",q:"When an emergency or service vehicle is stopped with flashing lights, you must…",options:["Maintain speed and pass carefully","Slow to half the posted speed and move over if safe","Stop completely in your lane","Only slow if there are workers present"],answer:1,explain:"‘Move Over’ law: slow to one-half the posted speed limit, proceed with caution, and change lanes away from the vehicle if it can be done safely."},
+  {id:14,cat:"rules",diff:"easy",type:"tf",q:"True or False: At an uncontrolled intersection, the driver on the left has the right-of-way.",options:["True","False"],answer:1,explain:"False. When two vehicles arrive at roughly the same time at an uncontrolled intersection, yield to the vehicle on your right."},
+  {id:15,cat:"rules",diff:"medium",type:"mc",q:"When a school bus is stopped with its red lights flashing, you must stop at least…",options:["2 metres away","5 metres away","10 metres away","15 metres away"],answer:1,explain:"Stop at least 5 m (16 ft) from a school bus with flashing red lights and remain stopped until the lights stop and the bus moves."},
+  {id:16,cat:"rules",diff:"hard",type:"mc",q:"It is an offence to follow a fire apparatus responding to an emergency closer than…",options:["50 metres","100 metres","150 metres","200 metres"],answer:2,explain:"Do not follow within 150 m (500 ft) of a fire apparatus answering an alarm, and do not park or drive within 150 m of one that has stopped."},
+  {id:17,cat:"rules",diff:"medium",type:"mc",q:"When parking uphill with a curb, you should turn your front wheels…",options:["Toward the curb (right)","Away from the curb (left)","Straight","It doesn’t matter"],answer:1,explain:"Uphill + curb: turn wheels left (away from curb) so the vehicle rolls into the curb if the brakes fail. Always set the parking brake."},
+  {id:18,cat:"rules",diff:"easy",type:"tf",q:"True or False: You must come to a complete stop at a stop sign, even if the way looks clear.",options:["True","False"],answer:0,explain:"True. A full stop is required. Check left, right, and left again before proceeding when safe."},
+  {id:19,cat:"rules",diff:"hard",type:"mc",q:"Solid yellow lines on your side of the centre line mean…",options:["Passing is allowed if safe","Passing is prohibited","Two-way traffic only","Lane ends ahead"],answer:1,explain:"A solid yellow line on your side means you must not pass. Broken yellow allows passing when safe and legal."},
+  {id:20,cat:"rules",diff:"medium",type:"mc",q:"How far from a fire hydrant must you stay when parking?",options:["2 metres","5 metres","10 metres","15 metres"],answer:1,explain:"Do not park within 5 m (16 ft) of a fire hydrant."},
+  {id:30,cat:"young",diff:"easy",type:"mc",q:"What is the minimum age to apply for a Class 7 Level 1 (learner’s) licence in New Brunswick?",options:["15","16","17","18"],answer:1,explain:"You must be at least 16 years old. If under 18, parental/guardian consent is required."},
+  {id:31,cat:"young",diff:"easy",type:"tf",q:"True or False: A Level 1 learner must always be accompanied by a fully licensed supervising driver.",options:["True","False"],answer:0,explain:"True. The supervising driver must hold a Class 5 (or higher) licence with at least 3 years of experience and sit in the front passenger seat."},
+  {id:32,cat:"young",diff:"medium",type:"mc",q:"During Level 1, driving is prohibited between which hours?",options:["10 p.m. – 6 a.m.","Midnight – 5 a.m.","11 p.m. – 5 a.m.","No night restriction"],answer:1,explain:"Level 1 drivers may not drive between midnight and 5:00 a.m."},
+  {id:33,cat:"young",diff:"easy",type:"tf",q:"True or False: Level 1 drivers may have a blood-alcohol concentration up to 0.05%.",options:["True","False"],answer:1,explain:"False. Zero alcohol (0% BAC) is required for Level 1 drivers at all times."},
+  {id:34,cat:"young",diff:"medium",type:"mc",q:"How long must you hold a Level 1 licence before you can take the road test for Level 2 (minimum)?",options:["6 months","8 or 12 months","18 months","24 months"],answer:1,explain:"Minimum 12 months, or 8 months if you graduate from a recognized licensed driving school."},
+  {id:35,cat:"young",diff:"hard",type:"mc",q:"While on a Level 1 licence, who is allowed as a passenger in the front seat?",options:["Any licensed driver","Only the supervising driver","Family members only","Anyone as long as seatbelts are used"],answer:1,explain:"Only the supervising driver may occupy the front passenger seat. The supervising driver must meet the experience requirements."},
+  {id:36,cat:"young",diff:"medium",type:"tf",q:"True or False: Level 1 drivers are allowed to use hands-free electronic devices while driving.",options:["True","False"],answer:1,explain:"False. No use of any electronic devices (including hands-free) is permitted for Level 1 drivers."},
+  {id:40,cat:"rules",diff:"medium",type:"mc",q:"If your vehicle starts to hydroplane, you should…",options:["Brake hard immediately","Steer sharply","Ease off the accelerator and steer straight","Accelerate to regain traction"],answer:2,explain:"Ease off the accelerator and keep the steering wheel straight until the tires regain contact with the road. Do not brake hard or make sudden movements."},
+  {id:41,cat:"rules",diff:"easy",type:"mc",q:"When a wheel runs off the pavement onto the shoulder, the first thing you should do is…",options:["Steer hard back onto the road","Brake firmly","Take your foot off the accelerator and steer straight","Accelerate"],answer:2,explain:"Take your foot off the accelerator and steer straight. Once slowed, gently ease back onto the pavement when safe."},
+  {id:42,cat:"rules",diff:"hard",type:"mc",q:"You must report a collision to police if there is injury/death or property damage exceeding…",options:["$500","$1,000","$2,000","Any amount"],answer:1,explain:"Report if there is death, injury, or property damage of $1,000 or more. Always stop and exchange information."},
+  {id:43,cat:"rules",diff:"medium",type:"tf",q:"True or False: Possession and use of radar detectors is legal in New Brunswick.",options:["True","False"],answer:1,explain:"False. Radar detectors are illegal in New Brunswick."},
+  {id:44,cat:"rules",diff:"easy",type:"mc",q:"In a multi-lane roundabout you should…",options:["Change lanes freely inside the circle","Enter when safe and drive counter-clockwise, staying in your lane","Drive clockwise","Stop in the middle if unsure"],answer:1,explain:"Enter only when safe, travel counter-clockwise, and do not change lanes inside a multi-lane roundabout. Yield to traffic already in the circle and to pedestrians."},
+  {id:45,cat:"rules",diff:"medium",type:"mc",q:"Speeding fines in school zones and construction zones are…",options:["The same as normal","Doubled","Halved","Only points, no fine"],answer:1,explain:"Fines for speeding in school zones and construction zones are doubled."},
+  {id:46,cat:"signs",diff:"hard",type:"mc",q:"A chevron (arrowhead) sign on a curve is telling you to…",options:["Stop","Merge","Follow the direction of the curve","Yield"],answer:2,explain:"Chevron alignment signs guide you around a curve or sharp turn. Follow the direction they point."},
+  {id:47,cat:"rules",diff:"medium",type:"mc",q:"When backing up you should…",options:["Rely only on mirrors","Back at walking speed while continuously scanning and checking blind spots","Accelerate quickly to clear the space","Look only over the right shoulder"],answer:1,explain:"Back at walking speed, use mirrors and shoulder checks, scan continuously, and keep one hand at the 12-o’clock position on the wheel for control."},
+  {id:48,cat:"young",diff:"easy",type:"mc",q:"Everyone in the vehicle of a Level 1 driver must…",options:["Be over 18","Wear a seatbelt","Have a licence","Sit in the back"],answer:1,explain:"All occupants must wear seatbelts. This is required at every level."},
+  {id:49,cat:"rules",diff:"hard",type:"mc",q:"You must not park within how many metres of a railway crossing?",options:["5 m","10 m","15 m","30 m"],answer:2,explain:"Do not park within 15 m (50 ft) of a railway crossing."},
+  {id:50,cat:"rules",diff:"medium",type:"tf",q:"True or False: You may pass on the right when the vehicle ahead is signalling a left turn, if it is safe to do so.",options:["True","False"],answer:0,explain:"True — one of the limited situations where passing on the right is permitted (also on one-way streets and multi-lane roads travelling in the same direction)."}
+];
+
+let currentMode = "mixed";
+let pool = [];
+let idx = 0;
+let correct = 0;
+let total = 0;
+let streak = 0;
+let bestStreak = 0;
+let answered = false;
+let sessionBest = 0;
+
+const DIFF_ORDER = { easy: 0, medium: 1, hard: 2 };
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildPool(mode) {
+  let list = questions;
+  if (mode === "signs") list = questions.filter(q => q.cat === "signs");
+  else if (mode === "rules") list = questions.filter(q => q.cat === "rules");
+  else if (mode === "young") list = questions.filter(q => q.cat === "young");
+  list = shuffle(list);
+  list.sort((a, b) => {
+    const da = DIFF_ORDER[a.diff] || 1;
+    const db = DIFF_ORDER[b.diff] || 1;
+    return da - db + (Math.random() - 0.5) * 0.8;
+  });
+  return list;
+}
+
+function startMode(mode) {
+  currentMode = mode;
+  pool = buildPool(mode);
+  idx = 0; correct = 0; total = 0; streak = 0; sessionBest = 0; answered = false;
+  document.getElementById("home").style.display = "none";
+  document.getElementById("result").style.display = "none";
+  document.getElementById("quiz").style.display = "block";
+  const titles = { mixed: "Endless Mix", signs: "Road Signs", rules: "Rules of the Road", young: "Young Drivers (Level 1)" };
+  document.getElementById("modeTitle").textContent = titles[mode] || "Training";
+  document.getElementById("modeSub").textContent = "Answer as many as you can — difficulty increases";
+  showQ();
+}
+
+function showQ() {
+  if (idx >= pool.length) { pool = buildPool(currentMode); idx = 0; }
+  const q = pool[idx];
+  answered = false;
+  document.getElementById("qCat").textContent = { signs: "Road Signs", rules: "Rules of the Road", young: "Young / Graduated Drivers" }[q.cat] || q.cat;
+  const diffEl = document.getElementById("qDiff");
+  diffEl.textContent = q.diff;
+  diffEl.className = "diff " + q.diff;
+  document.getElementById("qText").textContent = q.q;
+  document.getElementById("signBox").style.display = "none";
+  document.getElementById("fb").className = "feedback";
+  document.getElementById("fb").style.display = "none";
+  document.getElementById("act").style.display = "none";
+
+  const optsEl = document.getElementById("opts");
+  optsEl.innerHTML = "";
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement("button");
+    btn.className = "opt";
+    btn.textContent = opt;
+    btn.onclick = () => selectOpt(i);
+    optsEl.appendChild(btn);
+  });
+  updateStats();
+  const pct = Math.min(100, (total % 20) / 20 * 100);
+  document.getElementById("prog").style.width = pct + "%";
+}
+
+function selectOpt(i) {
+  if (answered) return;
+  answered = true;
+  const q = pool[idx];
+  const opts = document.querySelectorAll(".opt");
+  opts.forEach((el, j) => {
+    el.disabled = true;
+    if (j === q.answer) el.classList.add("correct");
+    if (j === i && i !== q.answer) el.classList.add("wrong");
+    if (j === i) el.classList.add("selected");
+  });
+  total++;
+  const fb = document.getElementById("fb");
+  if (i === q.answer) {
+    correct++; streak++;
+    if (streak > sessionBest) sessionBest = streak;
+    if (streak > bestStreak) bestStreak = streak;
+    fb.className = "feedback show ok";
+    fb.innerHTML = "<strong>Correct!</strong><br>" + q.explain;
+  } else {
+    streak = 0;
+    fb.className = "feedback show bad";
+    fb.innerHTML = "<strong>Not quite.</strong><br>" + q.explain;
+  }
+  document.getElementById("act").style.display = "flex";
+  updateStats();
+  saveLocal();
+}
+
+function nextQ() { idx++; showQ(); }
+
+function updateStats() {
+  document.getElementById("s-score").textContent = correct;
+  document.getElementById("s-streak").textContent = streak;
+  document.getElementById("s-total").textContent = total;
+}
+
+function endSession() {
+  document.getElementById("quiz").style.display = "none";
+  document.getElementById("result").style.display = "block";
+  document.getElementById("r-correct").textContent = correct;
+  const acc = total ? Math.round((correct / total) * 100) : 0;
+  document.getElementById("r-acc").textContent = acc + "%";
+  document.getElementById("r-streak").textContent = sessionBest;
+  let msg = "Good effort!";
+  if (acc >= 90) msg = "Excellent — you’re exam-ready!";
+  else if (acc >= 75) msg = "Solid work. Review the ones you missed and try again.";
+  else if (total > 0) msg = "Keep practising — the handbook + this trainer will get you there.";
+  document.getElementById("r-msg").textContent = msg;
+  saveLocal();
+}
+
+function showHome() {
+  document.getElementById("result").style.display = "none";
+  document.getElementById("quiz").style.display = "none";
+  document.getElementById("home").style.display = "block";
+  loadLocal();
+}
+
+function saveLocal() {
+  try {
+    const data = JSON.parse(localStorage.getItem("nbDriverTrainer") || "{}");
+    data.bestStreak = Math.max(data.bestStreak || 0, bestStreak);
+    data.lifetimeCorrect = (data.lifetimeCorrect || 0) + (answered ? 0 : 0);
+    data.lifetimeTotal = (data.lifetimeTotal || 0);
+    localStorage.setItem("nbDriverTrainer", JSON.stringify(data));
+  } catch (e) {}
+}
+
+function loadLocal() {
+  try {
+    const data = JSON.parse(localStorage.getItem("nbDriverTrainer") || "{}");
+    if (data.bestStreak) {
+      document.getElementById("homeStats").style.display = "flex";
+      document.getElementById("hs-total").textContent = data.lifetimeTotal || 0;
+      const acc = data.lifetimeTotal ? Math.round((data.lifetimeCorrect / data.lifetimeTotal) * 100) : 0;
+      document.getElementById("hs-acc").textContent = acc + "%";
+      document.getElementById("hs-streak").textContent = data.bestStreak || 0;
+    }
+  } catch (e) {}
+}
+
+loadLocal();
+</script>
+</body>
+</html>

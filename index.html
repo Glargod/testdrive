@@ -1,1 +1,436 @@
-PLACEHOLDER
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>NB Driver Trainer • Rules of the Road</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --accent: #22c55e;
+      --accent-dim: #16a34a;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+      padding: 12px;
+    }
+    .app { max-width: 520px; margin: 0 auto; }
+    header { text-align: center; padding: 16px 0 12px; }
+    header h1 { font-size: 1.45rem; font-weight: 700; letter-spacing: -0.02em; }
+    header p { color: var(--muted); font-size: 0.9rem; margin-top: 4px; }
+    .badge {
+      display: inline-block; background: var(--accent); color: #052e16;
+      font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; margin-top: 8px;
+    }
+    .stats { display: flex; gap: 8px; margin: 12px 0; flex-wrap: wrap; }
+    .stat {
+      flex: 1; min-width: 90px; background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 10px; text-align: center;
+    }
+    .stat .num { font-size: 1.35rem; font-weight: 700; color: var(--accent); }
+    .stat .label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .controls { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    select, button {
+      font: inherit; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--card); color: var(--text); padding: 10px 14px; cursor: pointer;
+    }
+    button.primary { background: var(--accent); color: #052e16; border-color: var(--accent); font-weight: 600; }
+    button.primary:active { background: var(--accent-dim); }
+    button.ghost { background: transparent; }
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+      padding: 20px; margin-bottom: 16px;
+    }
+    .q-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 0.8rem; color: var(--muted); }
+    .diff { padding: 2px 8px; border-radius: 6px; font-weight: 600; font-size: 0.7rem; }
+    .diff.easy { background: #14532d; color: #86efac; }
+    .diff.medium { background: #713f12; color: #fde68a; }
+    .diff.hard { background: #7f1d1d; color: #fca5a5; }
+    .question { font-size: 1.15rem; font-weight: 600; margin-bottom: 16px; }
+    .sign-box {
+      background: #0f172a; border-radius: 12px; padding: 24px; margin-bottom: 16px;
+      text-align: center; min-height: 140px; display: flex; align-items: center; justify-content: center;
+      border: 1px dashed var(--border);
+    }
+    .options { display: flex; flex-direction: column; gap: 10px; }
+    .opt {
+      background: #0f172a; border: 2px solid var(--border); border-radius: 12px;
+      padding: 14px 16px; text-align: left; cursor: pointer; transition: border-color 0.15s, background 0.15s; font-size: 1rem;
+    }
+    .opt:hover { border-color: var(--muted); }
+    .opt.selected { border-color: var(--accent); background: #14532d33; }
+    .opt.correct { border-color: var(--accent); background: #14532d55; }
+    .opt.wrong { border-color: var(--danger); background: #7f1d1d44; }
+    .opt:disabled { cursor: default; opacity: 0.9; }
+    .feedback { margin-top: 16px; padding: 14px; border-radius: 12px; font-size: 0.95rem; display: none; }
+    .feedback.show { display: block; }
+    .feedback.ok { background: #14532d44; border: 1px solid var(--accent); }
+    .feedback.bad { background: #7f1d1d44; border: 1px solid var(--danger); }
+    .actions { display: flex; gap: 10px; margin-top: 16px; }
+    .actions button { flex: 1; }
+    .home-screen, .result-screen { text-align: center; }
+    .home-screen h2 { margin-bottom: 8px; }
+    .home-screen p { color: var(--muted); margin-bottom: 20px; }
+    .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+    .mode-btn {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 18px 12px; text-align: center; cursor: pointer;
+    }
+    .mode-btn:hover { border-color: var(--accent); }
+    .mode-btn strong { display: block; font-size: 1.05rem; margin-bottom: 4px; }
+    .mode-btn span { font-size: 0.8rem; color: var(--muted); }
+    footer { text-align: center; font-size: 0.75rem; color: var(--muted); padding: 20px 0 40px; }
+    .progress-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin: 8px 0 16px; }
+    .progress-bar > div { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s; }
+    .bank-meta { font-size: 0.8rem; color: var(--muted); margin-top: 8px; }
+    .rs { display: inline-flex; align-items: center; justify-content: center; position: relative; }
+    .rs-stop {
+      width: 96px; height: 96px; background: #dc2626; color: #fff;
+      clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+      font-weight: 800; font-size: 1.1rem; letter-spacing: 0.06em;
+      border: 4px solid #fff; box-shadow: 0 0 0 3px #dc2626;
+    }
+    .rs-yield {
+      width: 0; height: 0;
+      border-left: 52px solid transparent; border-right: 52px solid transparent;
+      border-top: 90px solid #dc2626; position: relative;
+    }
+    .rs-yield::after {
+      content: "YIELD"; position: absolute; top: -72px; left: -28px; width: 56px;
+      color: #111; font-weight: 800; font-size: 0.72rem; letter-spacing: 0.04em; text-align: center; z-index: 1;
+    }
+    .rs-dne {
+      width: 90px; height: 90px; border-radius: 50%; background: #dc2626;
+      display: flex; align-items: center; justify-content: center;
+      border: 4px solid #fff; box-shadow: 0 0 0 2px #111;
+    }
+    .rs-dne span { width: 56px; height: 12px; background: #fff; border-radius: 2px; }
+    .rs-school {
+      width: 88px; height: 88px; background: #a3e635;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      display: flex; align-items: center; justify-content: center;
+      border: 3px solid #111; color: #111; font-size: 2rem;
+    }
+    .rs-nou {
+      width: 90px; height: 90px; border-radius: 50%; background: #fff;
+      border: 8px solid #dc2626; position: relative;
+      display: flex; align-items: center; justify-content: center; color: #111; font-size: 1.8rem;
+    }
+    .rs-nou::after {
+      content: ""; position: absolute; width: 100%; height: 8px; background: #dc2626;
+      transform: rotate(-45deg); border-radius: 2px;
+    }
+    .rs-twoway {
+      width: 90px; height: 90px; background: #facc15; transform: rotate(45deg);
+      border: 3px solid #111; display: flex; align-items: center; justify-content: center;
+    }
+    .rs-twoway span {
+      transform: rotate(-45deg); font-size: 1.6rem; color: #111; font-weight: 800;
+      line-height: 1; text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <div id="home" class="home-screen">
+      <header>
+        <h1>🚗 NB Driver Trainer</h1>
+        <p>Rules of the Road • New Brunswick</p>
+        <span class="badge">Based on official Driver’s Handbook</span>
+        <div class="bank-meta" id="bankMeta">Loading question bank…</div>
+      </header>
+      <div class="card">
+        <h2>Ready to crush the written exam?</h2>
+        <p>Interactive practice with signs, rules, young-driver restrictions & more. Difficulty ramps up as you go.</p>
+        <div class="mode-grid">
+          <div class="mode-btn" onclick="startMode('mixed')">
+            <strong>Endless Mix</strong>
+            <span>All topics • adaptive</span>
+          </div>
+          <div class="mode-btn" onclick="startMode('signs')">
+            <strong>Road Signs</strong>
+            <span>Recognition & meaning</span>
+          </div>
+          <div class="mode-btn" onclick="startMode('rules')">
+            <strong>Rules of the Road</strong>
+            <span>Speed, right-of-way…</span>
+          </div>
+          <div class="mode-btn" onclick="startMode('young')">
+            <strong>Young Drivers</strong>
+            <span>Level 1 restrictions</span>
+          </div>
+        </div>
+        <button class="primary" style="width:100%" onclick="startMode('mixed')">Start Training</button>
+      </div>
+      <div class="stats" id="homeStats" style="display:none">
+        <div class="stat"><div class="num" id="hs-total">0</div><div class="label">Answered</div></div>
+        <div class="stat"><div class="num" id="hs-acc">0%</div><div class="label">Accuracy</div></div>
+        <div class="stat"><div class="num" id="hs-streak">0</div><div class="label">Best Streak</div></div>
+      </div>
+    </div>
+
+    <div id="quiz" style="display:none">
+      <header>
+        <h1 id="modeTitle">Training</h1>
+        <p id="modeSub">Keep going…</p>
+      </header>
+      <div class="stats">
+        <div class="stat"><div class="num" id="s-score">0</div><div class="label">Correct</div></div>
+        <div class="stat"><div class="num" id="s-streak">0</div><div class="label">Streak</div></div>
+        <div class="stat"><div class="num" id="s-total">0</div><div class="label">Total</div></div>
+      </div>
+      <div class="progress-bar"><div id="prog"></div></div>
+      <div class="card">
+        <div class="q-meta">
+          <span id="qCat">Rules</span>
+          <span class="diff" id="qDiff">easy</span>
+        </div>
+        <div class="sign-box" id="signBox" style="display:none"></div>
+        <div class="question" id="qText"></div>
+        <div class="options" id="opts"></div>
+        <div class="feedback" id="fb"></div>
+        <div class="actions" id="act" style="display:none">
+          <button class="primary" onclick="nextQ()">Next Question →</button>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="ghost" onclick="endSession()">End Session</button>
+      </div>
+    </div>
+
+    <div id="result" style="display:none" class="result-screen">
+      <header><h1>Session Complete</h1></header>
+      <div class="card">
+        <div class="stats" style="margin-bottom:20px">
+          <div class="stat"><div class="num" id="r-correct">0</div><div class="label">Correct</div></div>
+          <div class="stat"><div class="num" id="r-acc">0%</div><div class="label">Accuracy</div></div>
+          <div class="stat"><div class="num" id="r-streak">0</div><div class="label">Best Streak</div></div>
+        </div>
+        <p id="r-msg" style="margin-bottom:20px;color:var(--muted)"></p>
+        <button class="primary" style="width:100%;margin-bottom:10px" onclick="startMode(currentMode)">Train Again</button>
+        <button class="ghost" style="width:100%" onclick="showHome()">Back Home</button>
+      </div>
+    </div>
+
+    <footer>
+      Based on the official New Brunswick Driver’s Handbook (Service NB / GNB).<br>
+      For practice only — always confirm with the latest handbook & laws.<br>
+      Question bank loads from <code>questions.json</code> • Made for young NB drivers ❤️
+    </footer>
+  </div>
+
+<script>
+let questions = [];
+let currentMode = "mixed";
+let pool = [];
+let idx = 0;
+let correct = 0;
+let total = 0;
+let streak = 0;
+let bestStreak = 0;
+let answered = false;
+let sessionBest = 0;
+let sessionCorrect = 0;
+let sessionTotal = 0;
+
+const DIFF_ORDER = { easy: 0, medium: 1, hard: 2 };
+
+const SIGN_HTML = {
+  stop: '<div class="rs rs-stop">STOP</div>',
+  yield: '<div class="rs" style="height:90px"><div class="rs-yield"></div></div>',
+  "do-not-enter": '<div class="rs rs-dne"><span></span></div>',
+  school: '<div class="rs rs-school">🎒</div>',
+  "no-u-turn": '<div class="rs rs-nou">↩️</div>',
+  "two-way": '<div class="rs rs-twoway"><span>↕</span></div>'
+};
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildPool(mode) {
+  let list = questions;
+  if (mode === "signs") list = questions.filter(q => q.cat === "signs");
+  else if (mode === "rules") list = questions.filter(q => q.cat === "rules");
+  else if (mode === "young") list = questions.filter(q => q.cat === "young");
+  list = shuffle(list);
+  list.sort((a, b) => {
+    const da = DIFF_ORDER[a.diff] || 1;
+    const db = DIFF_ORDER[b.diff] || 1;
+    return da - db + (Math.random() - 0.5) * 0.8;
+  });
+  return list;
+}
+
+function startMode(mode) {
+  if (!questions.length) return;
+  currentMode = mode;
+  pool = buildPool(mode);
+  idx = 0; correct = 0; total = 0; streak = 0; sessionBest = 0;
+  sessionCorrect = 0; sessionTotal = 0; answered = false;
+  document.getElementById("home").style.display = "none";
+  document.getElementById("result").style.display = "none";
+  document.getElementById("quiz").style.display = "block";
+  const titles = { mixed: "Endless Mix", signs: "Road Signs", rules: "Rules of the Road", young: "Young Drivers (Level 1)" };
+  document.getElementById("modeTitle").textContent = titles[mode] || "Training";
+  document.getElementById("modeSub").textContent = "Answer as many as you can — difficulty increases";
+  showQ();
+}
+
+function showQ() {
+  if (idx >= pool.length) { pool = buildPool(currentMode); idx = 0; }
+  const q = pool[idx];
+  answered = false;
+  document.getElementById("qCat").textContent = { signs: "Road Signs", rules: "Rules of the Road", young: "Young / Graduated Drivers" }[q.cat] || q.cat;
+  const diffEl = document.getElementById("qDiff");
+  diffEl.textContent = q.diff;
+  diffEl.className = "diff " + q.diff;
+  document.getElementById("qText").textContent = q.q;
+
+  const signBox = document.getElementById("signBox");
+  if (q.sign && SIGN_HTML[q.sign]) {
+    signBox.style.display = "flex";
+    signBox.innerHTML = SIGN_HTML[q.sign];
+  } else {
+    signBox.style.display = "none";
+    signBox.innerHTML = "";
+  }
+
+  document.getElementById("fb").className = "feedback";
+  document.getElementById("fb").style.display = "none";
+  document.getElementById("act").style.display = "none";
+
+  const optsEl = document.getElementById("opts");
+  optsEl.innerHTML = "";
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement("button");
+    btn.className = "opt";
+    btn.textContent = opt;
+    btn.onclick = () => selectOpt(i);
+    optsEl.appendChild(btn);
+  });
+  updateStats();
+  const pct = Math.min(100, (total % 20) / 20 * 100);
+  document.getElementById("prog").style.width = pct + "%";
+}
+
+function selectOpt(i) {
+  if (answered) return;
+  answered = true;
+  const q = pool[idx];
+  const opts = document.querySelectorAll(".opt");
+  opts.forEach((el, j) => {
+    el.disabled = true;
+    if (j === q.answer) el.classList.add("correct");
+    if (j === i && i !== q.answer) el.classList.add("wrong");
+    if (j === i) el.classList.add("selected");
+  });
+  total++; sessionTotal++;
+  const fb = document.getElementById("fb");
+  if (i === q.answer) {
+    correct++; sessionCorrect++; streak++;
+    if (streak > sessionBest) sessionBest = streak;
+    if (streak > bestStreak) bestStreak = streak;
+    fb.className = "feedback show ok";
+    fb.innerHTML = "<strong>Correct!</strong><br>" + q.explain;
+  } else {
+    streak = 0;
+    fb.className = "feedback show bad";
+    fb.innerHTML = "<strong>Not quite.</strong><br>" + q.explain;
+  }
+  document.getElementById("act").style.display = "flex";
+  updateStats();
+}
+
+function nextQ() { idx++; showQ(); }
+
+function updateStats() {
+  document.getElementById("s-score").textContent = correct;
+  document.getElementById("s-streak").textContent = streak;
+  document.getElementById("s-total").textContent = total;
+}
+
+function persistSession() {
+  try {
+    const data = JSON.parse(localStorage.getItem("nbDriverTrainer") || "{}");
+    data.bestStreak = Math.max(data.bestStreak || 0, bestStreak, sessionBest);
+    data.lifetimeTotal = (data.lifetimeTotal || 0) + sessionTotal;
+    data.lifetimeCorrect = (data.lifetimeCorrect || 0) + sessionCorrect;
+    localStorage.setItem("nbDriverTrainer", JSON.stringify(data));
+    sessionTotal = 0; sessionCorrect = 0;
+  } catch (e) {}
+}
+
+function endSession() {
+  persistSession();
+  document.getElementById("quiz").style.display = "none";
+  document.getElementById("result").style.display = "block";
+  document.getElementById("r-correct").textContent = correct;
+  const acc = total ? Math.round((correct / total) * 100) : 0;
+  document.getElementById("r-acc").textContent = acc + "%";
+  document.getElementById("r-streak").textContent = sessionBest;
+  let msg = "Good effort!";
+  if (acc >= 90) msg = "Excellent — you’re exam-ready!";
+  else if (acc >= 75) msg = "Solid work. Review the ones you missed and try again.";
+  else if (total > 0) msg = "Keep practising — the handbook + this trainer will get you there.";
+  document.getElementById("r-msg").textContent = msg;
+}
+
+function showHome() {
+  document.getElementById("result").style.display = "none";
+  document.getElementById("quiz").style.display = "none";
+  document.getElementById("home").style.display = "block";
+  loadLocal();
+}
+
+function loadLocal() {
+  try {
+    const data = JSON.parse(localStorage.getItem("nbDriverTrainer") || "{}");
+    if (data.bestStreak || data.lifetimeTotal) {
+      document.getElementById("homeStats").style.display = "flex";
+      document.getElementById("hs-total").textContent = data.lifetimeTotal || 0;
+      const acc = data.lifetimeTotal ? Math.round((data.lifetimeCorrect / data.lifetimeTotal) * 100) : 0;
+      document.getElementById("hs-acc").textContent = acc + "%";
+      document.getElementById("hs-streak").textContent = data.bestStreak || 0;
+    }
+  } catch (e) {}
+}
+
+async function init() {
+  loadLocal();
+  try {
+    const res = await fetch("questions.json?v=" + Date.now());
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    questions = data.questions || data;
+    const counts = { signs: 0, rules: 0, young: 0 };
+    questions.forEach(q => { if (counts[q.cat] != null) counts[q.cat]++; });
+    document.getElementById("bankMeta").textContent =
+      questions.length + " questions loaded · " +
+      counts.signs + " signs · " + counts.rules + " rules · " + counts.young + " young drivers";
+  } catch (err) {
+    document.getElementById("bankMeta").textContent = "Could not load questions.json — check the repo.";
+    console.error(err);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
